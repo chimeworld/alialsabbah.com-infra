@@ -35,3 +35,13 @@ resource "aws_s3_bucket" "alialsabbah-cdn" {
     index_document = "index.html"
   }
 }
+
+terraform {
+  backend "s3" {
+    bucket = "tfstate-ecpxdipaf8"
+    key    = "alialsabbah.com/s3/terraform.tfstate"
+    region = "us-west-1"
+    dynamodb_table = "terraform-locker"
+    encrypt        = true
+  }
+}
