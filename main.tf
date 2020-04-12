@@ -70,14 +70,14 @@ resource "aws_cloudfront_distribution" "distribution" {
   is_ipv6_enabled     = true
   default_root_object = "index.html"
   logging_config {
-    bucket          = "alialsabbah.s3.amazonaws.com"
+    bucket          = aws_s3_bucket.alialsabbah-cdn.bucket_domain_name
     include_cookies = false
     prefix          = "cdn/"
   }
 
   aliases = [
-    "alialsabbah.com",
-    "www.alialsabbah.com",
+    aws_s3_bucket.alialsabbah-site.id,
+    aws_s3_bucket.www-alialsabbah-site.id,
   ]
   default_cache_behavior {
     allowed_methods = [
@@ -94,7 +94,7 @@ resource "aws_cloudfront_distribution" "distribution" {
     max_ttl                = 31536000
     min_ttl                = 0
     smooth_streaming       = false
-    target_origin_id       = "S3-alialsabbah.com"
+    target_origin_id       = "S3-${aws_s3_bucket.alialsabbah-site.id}"
     trusted_signers        = []
     viewer_protocol_policy = "redirect-to-https"
 
