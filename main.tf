@@ -2,7 +2,7 @@ provider "aws" {
   region = "us-west-1"
 }
 
-resource "aws_s3_bucket" "alialsabbah-site" {
+resource "aws_s3_bucket" "site" {
   bucket = "alialsabbah.com"
   policy = file("policy.json")
   acl    = "private"
@@ -12,36 +12,36 @@ resource "aws_s3_bucket" "alialsabbah-site" {
   }
 }
 
-resource "aws_s3_bucket_public_access_block" "block-alialsabbah-site" {
-  bucket                  = aws_s3_bucket.alialsabbah-site.id
+resource "aws_s3_bucket_public_access_block" "block-site" {
+  bucket                  = aws_s3_bucket.site.id
   block_public_acls       = false
   block_public_policy     = false
   ignore_public_acls      = false
   restrict_public_buckets = false
 }
 
-resource "aws_s3_bucket" "www-alialsabbah-site" {
+resource "aws_s3_bucket" "www" {
   bucket = "www.alialsabbah.com"
   website {
     redirect_all_requests_to = "alialsabbah.com"
   }
 }
 
-resource "aws_s3_bucket_public_access_block" "block-www-site" {
-  bucket                  = aws_s3_bucket.www-alialsabbah-site.id
+resource "aws_s3_bucket_public_access_block" "block-www" {
+  bucket                  = aws_s3_bucket.www.id
   block_public_acls       = true
   block_public_policy     = true
   ignore_public_acls      = true
   restrict_public_buckets = true
 }
 
-resource "aws_s3_bucket" "alialsabbah-cdn" {
-  bucket = "alialsabbah-cdn"
+resource "aws_s3_bucket" "cdn-logs" {
+  bucket = "alialsabbah.com-cdn-logs"
   acl    = "private"
 }
 
-resource "aws_s3_bucket_public_access_block" "block-cdn" {
-  bucket                  = aws_s3_bucket.alialsabbah-cdn.id
+resource "aws_s3_bucket_public_access_block" "block-cdn-logs" {
+  bucket                  = aws_s3_bucket.cdn-logs.id
   block_public_acls       = true
   block_public_policy     = true
   ignore_public_acls      = true
@@ -50,8 +50,8 @@ resource "aws_s3_bucket_public_access_block" "block-cdn" {
 
 resource "aws_cloudfront_distribution" "distribution" {
   origin {
-    domain_name = aws_s3_bucket.alialsabbah-site.website_endpoint 
-    origin_id   = "S3-${aws_s3_bucket.alialsabbah-site.id}"
+    domain_name = aws_s3_bucket.site.website_endpoint 
+    origin_id   = "S3-${aws_s3_bucket.site.id}"
 
     custom_origin_config {
       http_port                = 80
@@ -70,14 +70,14 @@ resource "aws_cloudfront_distribution" "distribution" {
   is_ipv6_enabled     = true
   default_root_object = "index.html"
   logging_config {
-    bucket          = aws_s3_bucket.alialsabbah-cdn.bucket_domain_name
+    bucket          = aws_s3_bucket.cdn-logs.bucket_domain_name
     include_cookies = false
     prefix          = "cdn/"
   }
 
   aliases = [
-    aws_s3_bucket.alialsabbah-site.id,
-    aws_s3_bucket.www-alialsabbah-site.id,
+    aws_s3_bucket.site.id,
+    aws_s3_bucket.www.id,
   ]
   default_cache_behavior {
     allowed_methods = [
@@ -94,7 +94,7 @@ resource "aws_cloudfront_distribution" "distribution" {
     max_ttl                = 31536000
     min_ttl                = 0
     smooth_streaming       = false
-    target_origin_id       = "S3-${aws_s3_bucket.alialsabbah-site.id}"
+    target_origin_id       = "S3-${aws_s3_bucket.site.id}"
     trusted_signers        = []
     viewer_protocol_policy = "redirect-to-https"
 
