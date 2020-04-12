@@ -20,10 +20,10 @@ resource "aws_s3_bucket" "www-alialsabbah-site" {
 }
 
 resource "aws_s3_bucket_public_access_block" "block-alialsabbah-site" {
-  bucket = aws_s3_bucket.alialsabbah-site.id
-  block_public_acls = false
-  block_public_policy = false
-  ignore_public_acls = false
+  bucket                  = aws_s3_bucket.alialsabbah-site.id
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
   restrict_public_buckets = false
 }
 
@@ -37,50 +37,89 @@ resource "aws_s3_bucket" "alialsabbah-cdn" {
 }
 
 resource "aws_cloudfront_distribution" "distribution" {
-    origin {
-    domain_name = aws_s3_bucket.alialsabbah-site.bucket_regional_domain_name
-    origin_id   = aws_s3_bucket.alialsabbah-site.id
+  origin {
+    domain_name = "alialsabbah.com.s3-website-us-west-1.amazonaws.com"
+    origin_id   = "S3-alialsabbah.com"
 
+    custom_origin_config {
+      http_port                = 80
+      https_port               = 443
+      origin_keepalive_timeout = 5
+      origin_protocol_policy   = "http-only"
+      origin_read_timeout      = 30
+      origin_ssl_protocols = [
+        "TLSv1",
+        "TLSv1.1",
+        "TLSv1.2",
+      ]
+    }
   }
-  enabled = true
-   logging_config {
+  enabled             = true
+  is_ipv6_enabled     = true
+  default_root_object = "index.html"
+  logging_config {
+    bucket          = "alialsabbah.s3.amazonaws.com"
     include_cookies = false
-    bucket          = "alialsabbah-cdn.s3.amazonaws.com"
-    prefix          = "cdn"
+    prefix          = "cdn/"
   }
-    default_cache_behavior {
-    allowed_methods  = ["GET", "HEAD", "OPTIONS"]
-    cached_methods   = ["GET", "HEAD"]
-    target_origin_id = aws_s3_bucket.alialsabbah-site.id
+
+  aliases = [
+    "alialsabbah.com",
+    "www.alialsabbah.com",
+  ]
+  default_cache_behavior {
+    allowed_methods = [
+      "GET",
+      "HEAD",
+      "OPTIONS",
+    ]
+    cached_methods = [
+      "GET",
+      "HEAD",
+    ]
+    compress               = false
+    default_ttl            = 86400
+    max_ttl                = 31536000
+    min_ttl                = 0
+    smooth_streaming       = false
+    target_origin_id       = "S3-alialsabbah.com"
+    trusted_signers        = []
+    viewer_protocol_policy = "redirect-to-https"
 
     forwarded_values {
-      query_string = false
+      headers                 = []
+      query_string            = false
+      query_string_cache_keys = []
 
       cookies {
-        forward = "none"
+        forward           = "none"
+        whitelisted_names = []
       }
     }
-    viewer_protocol_policy = "redirect-to-https"
-}
-    viewer_certificate {
-      acm_certificate_arn = "arn:aws:acm:us-east-1:422591206036:certificate/eaede853-bd64-47fc-87e6-09046038692b"
-              minimum_protocol_version       = "TLSv1.1_2016"
-              ssl_support_method             = "sni-only"
-    }
+  }
 
-    restrictions {
-      geo_restriction{
+
+  restrictions {
+    geo_restriction {
+      locations        = []
       restriction_type = "none"
     }
-    }
+  }
+
+  viewer_certificate {
+    acm_certificate_arn            = "arn:aws:acm:us-east-1:422591206036:certificate/eaede853-bd64-47fc-87e6-09046038692b"
+    cloudfront_default_certificate = false
+    minimum_protocol_version       = "TLSv1.1_2016"
+    ssl_support_method             = "sni-only"
+  }
 
 }
 
 terraform {
   backend "s3" {
-    bucket = "tfstate-ecpxdipaf8"
-    key    = "alialsabbah.com/s3/terraform.tfstate"
-    region = "us-west-1"
+    bucket         = "tfstate-ecpxdipaf8"
+    key            = "alialsabbah.com/s3/terraform.tfstate"
+    region         = "us-west-1"
     dynamodb_table = "terraform-locker"
     encrypt        = true
   }
