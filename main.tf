@@ -12,13 +12,6 @@ resource "aws_s3_bucket" "alialsabbah-site" {
   }
 }
 
-resource "aws_s3_bucket" "www-alialsabbah-site" {
-  bucket = "www.alialsabbah.com"
-  website {
-    redirect_all_requests_to = "alialsabbah.com"
-  }
-}
-
 resource "aws_s3_bucket_public_access_block" "block-alialsabbah-site" {
   bucket                  = aws_s3_bucket.alialsabbah-site.id
   block_public_acls       = false
@@ -27,19 +20,38 @@ resource "aws_s3_bucket_public_access_block" "block-alialsabbah-site" {
   restrict_public_buckets = false
 }
 
+resource "aws_s3_bucket" "www-alialsabbah-site" {
+  bucket = "www.alialsabbah.com"
+  website {
+    redirect_all_requests_to = "alialsabbah.com"
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "block-www-site" {
+  bucket                  = aws_s3_bucket.www-alialsabbah-site.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
 resource "aws_s3_bucket" "alialsabbah-cdn" {
   bucket = "alialsabbah-cdn"
   acl    = "private"
+}
 
-  website {
-    index_document = "index.html"
-  }
+resource "aws_s3_bucket_public_access_block" "block-cdn" {
+  bucket                  = aws_s3_bucket.alialsabbah-cdn.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
 }
 
 resource "aws_cloudfront_distribution" "distribution" {
   origin {
-    domain_name = "alialsabbah.com.s3-website-us-west-1.amazonaws.com"
-    origin_id   = "S3-alialsabbah.com"
+    domain_name = aws_s3_bucket.alialsabbah-site.website_endpoint 
+    origin_id   = "S3-${aws_s3_bucket.alialsabbah-site.id}"
 
     custom_origin_config {
       http_port                = 80
