@@ -1,5 +1,6 @@
 provider "aws" {
   region = "us-west-1"
+  version = "~> 3.37"
 }
 
 resource "aws_s3_bucket" "site" {
@@ -119,7 +120,7 @@ resource "aws_cloudfront_distribution" "distribution" {
   }
 
   viewer_certificate {
-    acm_certificate_arn            = "arn:aws:acm:us-east-1:422591206036:certificate/eaede853-bd64-47fc-87e6-09046038692b"
+    acm_certificate_arn            = "arn:aws:acm:us-east-1:422591206036:certificate/867cc049-1a45-4151-a0d1-23dd4d909842"
     cloudfront_default_certificate = false
     minimum_protocol_version       = "TLSv1.1_2016"
     ssl_support_method             = "sni-only"
